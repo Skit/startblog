@@ -1,4 +1,5 @@
 ### Yii ###
+# *.ext ignore all files with the specified extension
 assets/*
 !assets/.gitignore
 protected/runtime/*
