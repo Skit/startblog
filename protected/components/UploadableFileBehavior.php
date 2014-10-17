@@ -76,7 +76,11 @@ class UploadableFileBehavior extends CActiveRecordBehavior{
 
             // Создаем директорию по имени модели
             if(self::_createDir(get_class($this->owner)))
+
                 $file->saveAs($this->savePath.$this->_newDir.$file->name);
+                $image = new EasyImage($this->savePath.$this->_newDir.$file->name);
+                $image->resize(100, 100);
+                $image->save($this->savePath.$this->_newDir.'easyimage_'.$file->name);
         }
         return true;
     }
