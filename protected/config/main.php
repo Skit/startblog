@@ -65,6 +65,10 @@ return array(
 			'password' => '',
 			'charset' => 'utf8',
             'tablePrefix' => 'tbl_',
+            // включаем профайлер
+            'enableProfiling'=>true,
+            // показываем значения параметров
+            'enableParamLogging' => true,
 		),
 		'errorHandler'=>array(
 			// use 'site/error' action to display errors
@@ -77,6 +81,18 @@ return array(
 					'class'=>'CFileLogRoute',
 					'levels'=>'error, warning',
 				),
+                array(
+                    // направляем результаты профайлинга в ProfileLogRoute (отображается
+                    // внизу страницы)
+                    'class'=>'CProfileLogRoute',
+                    'levels'=>'profile',
+                    'enabled'=>true,
+                ),
+                array(
+                    'class' => 'CWebLogRoute',
+                    'categories' => 'application',
+                    'levels'=>'error, warning, trace, profile, info',
+                ),
 				// uncomment the following to show log messages on web pages
 				/*
 				array(
