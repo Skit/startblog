@@ -64,7 +64,6 @@ class PostController extends Controller
 		if(isset($_POST['Post']))
 		{
 			$model->attributes=$_POST['Post'];
-            //die(var_dump($_POST['Post']));
 			if($model->save())
 				$this->redirect(array('view','id'=>$model->id));
 		}
@@ -88,8 +87,12 @@ class PostController extends Controller
 			if($model->save())
 				$this->redirect(array('view','id'=>$model->id));
 		}
+        // NOTICE: выполняем проверку, есть ли данные в поле `content`
+        // В связи с манипуляциями подсветки синтаксиса см. Post::beforeSave
+        if($model->content == '')
+            $model->content = $model->stringUnCompress($model->gzip);
 
-		$this->render('update',array(
+        $this->render('update',array(
 			'model'=>$model,
 		));
 	}

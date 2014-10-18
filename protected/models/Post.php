@@ -25,6 +25,7 @@ class Post extends CActiveRecord
 	private $_oldTags;
     public $syntax;
     public $category_id;
+    public $gzip;
 
 	/**
 	 * Returns the static model of the specified AR class.
@@ -165,14 +166,12 @@ class Post extends CActiveRecord
 			}
 			else
 				$this->update_time=time();
-
             /*
              * Подсветка синтаксиса
              */
             if($this->syntax != Post::SYNTAX_NONE) // Включена ли подсветка
             {
                 Yii::import('application.apis.ReplaceHighlight');
-                //die(var_dump(Yii::app()->db->getLastInsertId()));
                 $replace=new ReplaceHighlight();
                 $replace->_setContent($this->content); // Задаем контент для подсветки
 
@@ -191,11 +190,18 @@ class Post extends CActiveRecord
                 if($result_highlight != NULL || $result_highlight != '')
                 {
                     $this->content_highlight = $result_highlight;
+                    // NOTICE: сжимаем оригинальный текст, т.к. использоваться будет из поле content_highlight
+                    $this->gzip = self::stringCompress($this->content);
+                    $this->content = NULL;
                 }
             }
-            else // NOTE: обнуляем поле с подсветкой кода, для вывода простой статьи
+            else {
+                // NOTE: обнуляем поле с подсветкой кода, для вывода простой статьи
+                // Распаковываем данные поля content и обнуляем поле `gzip`
+                $this->content = self::stringUnCompress($this->gzip);
+                $this->gzip = NULL;
                 $this->content_highlight = NULL;
-
+            }
 			return true;
 		}
 		else
@@ -242,15 +248,21 @@ class Post extends CActiveRecord
 	}
 
     /**
-     *
+     * Сжимает строку, степень сжатия максимальная, т.к.
+     * функция выполняется только при редактировании материала
+     * @param string $string получает строку
+     * @return string возвращает сжатые данные
      */
-    /*public function behaviors(){
-        return array(
-            // наше поведение для работы с файлом
-            'uploadableFile'=>array(
-                'class'=>'application.UploadableFileBehavior',
+    public function stringCompress($string){
+        return gzdeflate($string,9);
+    }
 
-            ),
-        );
-    }*/
+    /**
+     * Выполняет распаковку сжатой строки
+     * @param string $string получает сжатые данные
+     * @return string возвращает распакованную строку
+     */
+    public function stringUnCompress($string){
+        return @gzinflate($string);
+    }
 }
