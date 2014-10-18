@@ -8,6 +8,8 @@
 return array(
 	'basePath'=>dirname(__FILE__).DIRECTORY_SEPARATOR.'..',
 	'name'=>'My Web Application',
+    'theme'=>'CoolBlue',
+    //'theme'=>'Classic',
 
 	// preloading 'log' component
 	'preload'=>array('log'),
@@ -109,6 +111,8 @@ return array(
             //'cacheTime' => 2592000,
             //'retinaSupport' => false,
         ),
+        'themeManager' => array(
+            'class'=>'themeManager'),
 	),
     // application-level parameters that can be accessed
     // using Yii::app()->params['paramName']
