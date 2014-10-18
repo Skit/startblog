@@ -26,7 +26,7 @@ class Post extends CActiveRecord
 	private $_oldTags;
     public $syntax;
     public $category_id;
-    public $gzip;
+    public $content_gzip;
     public $preview;
 
 	/**
@@ -57,7 +57,7 @@ class Post extends CActiveRecord
 			array('title, content, status, syntax, category_id', 'required'),
 			array('status, syntax', 'in', 'range'=>array(1,2,3)),
 			array('title', 'length', 'max'=>128),
-			array('tags', 'match', 'pattern'=>'/^[\w\s,]+$/', 'message'=>'Tags can only contain word characters.'),
+			array('tags', 'match', 'pattern'=>'/[\x{0400}-\x{04FF}]+/ui', 'message'=>'Tags can only contain word characters.'),
 			array('tags', 'normalizeTags'),
 
 			array('title, status', 'safe', 'on'=>'search'),
@@ -164,8 +164,7 @@ class Post extends CActiveRecord
 		{
             // Добавляем превью по умолчанию.
             // Обрезаем основной текст `content` для `preview`
-            if(strlen($this->content) > $param = Yii::app()->params['shortText']) {
-
+            if((strlen($this->content) > $param = Yii::app()->params['shortText']) && ($this->preview == '')) {
                 Yii::import('application.apis.CutString');
                 $shortText = new CutString($this->content, $param, '...');
                 $this->preview = $shortText->getShortText();
@@ -203,16 +202,16 @@ class Post extends CActiveRecord
                 {
                     $this->content_highlight = $result_highlight;
                     // NOTICE: сжимаем оригинальный текст, т.к. использоваться будет из поле content_highlight
-                    $this->gzip = self::stringCompress($this->content);
+                    $this->content_gzip = self::stringCompress($this->content);
                     $this->content = NULL;
                 }
             }
             else {
                 // NOTE: обнуляем поле с подсветкой кода, для вывода простой статьи
-                // Распаковываем данные поля content и обнуляем поле `gzip`
-                if($this->gzip != ''){
-                    $this->content = self::stringUnCompress($this->gzip);
-                    $this->gzip = NULL;
+                // Распаковываем данные поля content и обнуляем поле `content_gzip`
+                if($this->content_gzip != ''){
+                    $this->content = self::stringUnCompress($this->content_gzip);
+                    $this->content_gzip = NULL;
                 }
                 $this->content_highlight = NULL;
             }
