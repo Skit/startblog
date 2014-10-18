@@ -20,11 +20,18 @@
     </div>
 
 	<div class="row">
-		<?php echo $form->labelEx($model,'content'); ?>
-		<?php echo CHtml::activeTextArea($model,'content',array('rows'=>10, 'cols'=>82)); ?>
-		<p class="hint">You may use <a target="_blank" href="http://daringfireball.net/projects/markdown/syntax">Markdown syntax</a>.</p>
-		<?php echo $form->error($model,'content'); ?>
-	</div>
+        <?php echo $form->labelEx($model,'content'); ?>
+        <?php echo CHtml::activeTextArea($model,'content',array('rows'=>10, 'cols'=>82)); ?>
+        <p class="hint">You may use <a target="_blank" href="http://daringfireball.net/projects/markdown/syntax">Markdown syntax</a>.</p>
+        <?php echo $form->error($model,'content'); ?>
+    </div>
+
+    <div class="row">
+        <?php echo $form->labelEx($model,'other_content'); ?>
+        <?php echo CHtml::activeTextArea($model,'other_content',array('rows'=>5, 'cols'=>82)); ?>
+        <p class="hint">Дополнительно по теме. Поле которое будет скрыто от поисковиков.</p>
+        <?php echo $form->error($model,'other_content'); ?>
+    </div>
 
     <div class="row">
         <?php echo $form->labelEx($model,'category_id'); ?>

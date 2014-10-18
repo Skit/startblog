@@ -25,9 +25,6 @@ class Post extends CActiveRecord
 
 	private $_oldTags;
     public $syntax;
-    public $category_id;
-    public $content_gzip;
-    public $preview;
 
 	/**
 	 * Returns the static model of the specified AR class.
@@ -57,8 +54,9 @@ class Post extends CActiveRecord
 			array('title, content, status, syntax, category_id', 'required'),
 			array('status, syntax', 'in', 'range'=>array(1,2,3)),
 			array('title', 'length', 'max'=>128),
-			array('tags', 'match', 'pattern'=>'/[\x{0400}-\x{04FF}]+/ui', 'message'=>'Tags can only contain word characters.'),
+			array('tags', 'match', 'pattern'=>'/^([\w\s,]|[\x{0400}-\x{04FF}])+$/ui', 'message'=>'Tags can only contain word characters.'),
 			array('tags', 'normalizeTags'),
+			array('other_content, preview, category_id', 'safe'),
 
 			array('title, status', 'safe', 'on'=>'search'),
 		);
@@ -89,6 +87,7 @@ class Post extends CActiveRecord
 			'title' => 'Заголовок',
 			'content' => 'Статья',
 			'preview' => 'Предописание',
+			'other_content' => 'Дополнительно по теме',
 			'tags' => 'Тэги',
 			'status' => 'Статус',
 			'create_time' => 'Create Time',

@@ -18,6 +18,9 @@
                     // подсветкой кода если таковой есть.
                     if($data->content_highlight != NULL) echo $data->content_highlight;
                     else echo $data->content;
+
+                    echo '<h2>Дополнительно по теме</h2>'.
+                         '<p>'.$data->other_content.'</p>';
                 }
 			$this->endWidget();
 		?>
