@@ -10,25 +10,45 @@ class CutString {
 
     /**
      * Настройки компонента
-     * @var integer $_caracters количество символов для обрезки
+     * @var integer $_characters количество символов для обрезки
+     * @var bool $_dot добавлять ли многоточие вконце
+     * @var string $_string строка для обработки
      */
     private $_characters;
+    private $_dot;
+    private $_string;
 
     /**
      * Инициализация объекта и его свойств
      */
-    public function __construct($characters){
+    public function __construct($string, $characters, $dot = false){
 
         $this->_characters=$characters;
+        $this->_string = ltrim(strip_tags($string));
+        $this->_dot=$dot;
+    }
+
+    /**
+     *
+     */
+    public function getShortText(){
+        return self::_cut();
     }
 
     /**
      * Метод обрезки статьи
-     * @param string $string текст для обрезки
-     * @param boolean $dot устанавливает многоточие после обрезанного текста
+     * @return string возвращает обрезанную строку в соответствии с параметрами
      */
-    private function _cut($string, $dot = false){
+    private function _cut(){
 
+        $this->_string = substr($this->_string, 0, $this->_characters);
+
+        $this->_string = substr($this->_string, 0, strrpos($this->_string,' '));
+
+        if($this->_dot)
+            $this->_string = $this->_string.$this->_dot;
+
+        return $this->_string;
     }
 
 } 

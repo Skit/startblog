@@ -12,6 +12,13 @@
 		<?php echo $form->error($model,'title'); ?>
 	</div>
 
+    <div class="row">
+        <?php echo $form->labelEx($model,'preview'); ?>
+        <?php echo CHtml::activeTextArea($model,'preview',array('rows'=>5, 'cols'=>82)); ?>
+        <p class="hint">Если оставить пустым будет использоваться часть основного текста (<?php echo Yii::app()->params['shortText'];?>) в соответствии с настройками</p>
+        <?php echo $form->error($model,'preview'); ?>
+    </div>
+
 	<div class="row">
 		<?php echo $form->labelEx($model,'content'); ?>
 		<?php echo CHtml::activeTextArea($model,'content',array('rows'=>10, 'cols'=>82)); ?>

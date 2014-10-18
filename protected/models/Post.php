@@ -7,6 +7,7 @@ class Post extends CActiveRecord
 	 * @var integer $id
 	 * @var string $title
 	 * @var string $content
+	 * @var string $preview
 	 * @var string $tags
 	 * @var integer $status
 	 * @var integer $syntax
@@ -26,6 +27,7 @@ class Post extends CActiveRecord
     public $syntax;
     public $category_id;
     public $gzip;
+    public $preview;
 
 	/**
 	 * Returns the static model of the specified AR class.
@@ -86,6 +88,7 @@ class Post extends CActiveRecord
 			'id' => 'Id',
 			'title' => 'Заголовок',
 			'content' => 'Статья',
+			'preview' => 'Предописание',
 			'tags' => 'Тэги',
 			'status' => 'Статус',
 			'create_time' => 'Create Time',
@@ -159,6 +162,15 @@ class Post extends CActiveRecord
     {
 		if(parent::beforeSave())
 		{
+            // Добавляем превью по умолчанию.
+            // Обрезаем основной текст `content` для `preview`
+            if(strlen($this->content) > $param = Yii::app()->params['shortText']) {
+
+                Yii::import('application.apis.CutString');
+                $shortText = new CutString($this->content, $param, '...');
+                $this->preview = $shortText->getShortText();
+            }
+
 			if($this->isNewRecord)
 			{
 				$this->create_time=$this->update_time=time();
@@ -198,8 +210,10 @@ class Post extends CActiveRecord
             else {
                 // NOTE: обнуляем поле с подсветкой кода, для вывода простой статьи
                 // Распаковываем данные поля content и обнуляем поле `gzip`
-                $this->content = self::stringUnCompress($this->gzip);
-                $this->gzip = NULL;
+                if($this->gzip != ''){
+                    $this->content = self::stringUnCompress($this->gzip);
+                    $this->gzip = NULL;
+                }
                 $this->content_highlight = NULL;
             }
 			return true;
@@ -263,6 +277,6 @@ class Post extends CActiveRecord
      * @return string возвращает распакованную строку
      */
     public function stringUnCompress($string){
-        return @gzinflate($string);
+            return @gzinflate($string);
     }
 }
