@@ -24,26 +24,24 @@ class UploadableFileBehavior extends CActiveRecordBehavior{
      * @var string максимальный размер загружаемого файла. По умолчанию 5 Мб (размер в байтах)
      */
     public $maxSize='5242880';
-      /**
-     * @var string путь сохранения файла
-     */
-    private $_saveFilePath;
     /**
-     * @var string серверное имя файла
+     *@var string путь к загруженному для дальнейшей обработки файлу
      */
-    private $_newFileName;
-    /**
-     * @var string путь новой вложенной директории для сохранения файла
-     */
-    private $_newDir;
+    private $_tmpFileOriginal;
 
     /**
      * Шорткат для Yii::getPathOfAlias($this->savePathAlias).DIRECTORY_SEPARATOR.
-     * Возвращает путь к директории, в которой будут сохраняться файлы.
      * @return string путь к директории, в которой сохраняем файлы
      */
     public function getSavePath(){
-        return $this->_saveFilePath=Yii::getPathOfAlias($this->savePathAlias).DS;
+        return Yii::getPathOfAlias($this->savePathAlias).DS;
+    }
+
+    /**
+     * @return string путь к диреткории где будет временно сохранятся файл
+     */
+    public function getTmpPath(){
+        return getcwd ().DS.'assets'.DS;
     }
     /**
      * @param CComponent $owner
@@ -74,30 +72,11 @@ class UploadableFileBehavior extends CActiveRecordBehavior{
 
             $this->owner->setAttribute($this->attributeName,$file->name);
 
-            // Создаем директорию по имени модели
-            if(self::_createDir(get_class($this->owner)))
-
-                $file->saveAs($this->savePath.$this->_newDir.$file->name);
-                $image = new EasyImage($this->savePath.$this->_newDir.$file->name);
-                $image->resize(100, 100);
-                $image->save($this->savePath.$this->_newDir.'easyimage_'.$file->name);
+            // Определяем путь до загружаемого файла и созраняем его
+            $this->_tmpFileOriginal = $this->tmpPath.$file->name;
+            $file->saveAs($this->_tmpFileOriginal);
         }
         return true;
-    }
-
-    // имейте ввиду, что методы-обработчики событий в поведениях должны иметь
-    // public-доступ начиная с 1.1.13RC
-    public function beforeDelete($event){
-        $this->deleteFile(); // удалили модель? удаляем и файл, связанный с ней
-    }
-
-    /**
-     * Удаляет файл по атрибуту
-     */
-    public function deleteFile(){
-        $filePath=$this->savePath.$this->_newDir.$this->owner->getAttribute($this->attributeName);
-        if(@is_file($filePath))
-            @unlink($filePath);
     }
 
     /**
@@ -106,109 +85,83 @@ class UploadableFileBehavior extends CActiveRecordBehavior{
      */
     public function afterSave($event){
 
-        self::_renameFile();
-
-        $this->owner->updateByPk(Yii::app()->db->lastInsertID, array('image'=>$this->_newDir.$this->_newFileName));
-    }
-
-    /**
-     * Создаем имя файла для загрузки, на основе расширения
-     * включая ID добавленой записи дату и прочие параметры
-     * @param string $file имя файла
-     * @return string возвращаем имя файла
-     */
-    private function _createFileName($file){
-
-        $pattern = '/\.[a-z]{2,}$/i';
-
-        preg_match($pattern,$file,$match); // извлекаем расширение файла с точкой
-
-        $extWithDot = strtolower($match[0]); // для эстетики все расширения будут в нижнем регистре
-
-        $postId = Yii::app()->db->lastInsertID;
-
-        $currentDate = date('dmy');
-
-        $templateImg = 'img';
-
-        $newFileName = $postId.'_'.$currentDate.'_'.$templateImg.$extWithDot;
-
-        return self::_recursiveDuplicateFileName($newFileName,$postId,$currentDate,$templateImg,$extWithDot);
-    }
-
-    /**
-     * Функция добавляет номер дубликата при повторении имени файла
-     * file.ext -> file_1.ext -> file_2.ext
-     * @param string $newFileName имя файла для переименования
-     * @param integer $postId ID записи сохраненной записи для добавления к имени файла
-     * @param integer $currentDate текущая дата NOTICE: необходимо получать ее из модели
-     * @param string $ext расширение файла с точкой (.ext)
-     * @param string $templateImg шаблон преобразования изображения
-     * @return string имя файла
-     */
-    private function _recursiveDuplicateFileName($newFileName,$postId,$currentDate,$templateImg,$ext){
-
-        if(file_exists($newFileName))
-        {
-            $pattern = '/[0-9]+_[0-9]{6,}_([0-9]+)\.[a-z]+$/'; // ищем номер дубликата
-
-            $duplicateNum = '1'; // присваивается первому дубликату
-
-            $constantFileName = $postId.'_'.$currentDate.'_'.$templateImg.'_';
-
-            preg_match($pattern,$this->owner->attributes['image'],$match);
-
-            if(!empty($match))
-            {
-                $duplicateNum = $match[1]+1;
-                $newFileName = $constantFileName.$duplicateNum.$ext;
-            }
-            else
-                $newFileName = $constantFileName.$duplicateNum.$ext;
-
-            self::_recursiveDuplicateFileName($newFileName,$postId,$currentDate,$templateImg,$ext);
+        // NOTICE: для новой записи задаем её ID и текущее время
+        // для создания имени файла
+        if($this->owner->isNewRecord == true){
+           $RecordId = Yii::app()->db->lastInsertID;
+           $RecordDate = date('dmy');
         }
-        else
-            return $this->_newFileName = $newFileName;
+        else{
+            // Берем текущее значение ID для созданной записи
+            $RecordId = $this->owner->id;
+            // Дату берем либо из таблицы, если такой нет - задаем свою
+            $RecordDate = (isset($this->owner->create)) ? $this->owner->create : date('dmy');
+        }
+        // Подгружаем класс для работы с именем файла
+        Yii::import('application.apis.FileName');
+
+        // Задаём настройки для работы с классом и его методами.
+        // Настройки передаются массивами. Их значения так же
+        // будут использованы далее в текущем методе
+        $path = array(
+            'path' => $this->getSavePath(),
+            'dir' => strtolower(get_class($this->owner)),
+        );
+        $templateFile = array(
+            'template'=> 'sys',
+            'id'=>$RecordId,
+            'date'=>$RecordDate,
+        );
+
+        $fileName = new FileName($path, $this->_tmpFileOriginal);
+        // Создаем имя файла, если такой файл существует
+        // метод создаст новое имя с числовым идентификатором new_1.ext
+        $new = $fileName->createFileName($templateFile);
+        // Выполняем переименование файла. Который будет скопирован в
+        // дирекотрию {$path} инициализированную при создании объекта
+        $fileName->renameFile($new);
+
+        // Сохраняем путь до картинки в БД
+        $this->owner->updateByPk($RecordId, array('image'=>$path['dir'].DS.$new));
+
+        // Получаем перечень шаблонов для создания ресайза
+        $templates = Yii::app()->params['imageTemplates'][$path['dir']];
+        // Обходим шаблоны, выполняя ресайз, согласно их значениям
+        foreach($templates as $templateName => $templateSize){
+            // компонент для работы с изображениями
+            $image = new EasyImage($this->_tmpFileOriginal);
+
+            // Преобразуем шаблон из настроек в шаблон компонента
+            $image->resize(
+                str_replace('*', ',',$templateSize)
+            );
+            // Сохраняем новый файл после ресайза
+            $image->save($path['path'].$path['dir'].DS.$new);
+
+            // Задаем имя шаблона, для переименования файла
+            $templateFile['template'] = $templateName;
+            $new = $fileName->createFileName($templateFile,$templateName);
+            $fileName->renameFile($new);
+        }
+        // Удаляем оригинальный файл
+       self::deleteFile($this->_tmpFileOriginal);
+    }
+
+     /**
+     * Метод не работает, необходимо допилить путь удаления файла
+     * в методе deleteFile()
+     * @param CEvent $event
+     */
+    public function beforeDelete($event){
+        $this->deleteFile(); // удалили модель? удаляем и файл, связанный с ней
     }
 
     /**
-     * Выполняет переименование файла
-     * @throws CException при ошибке создания или перемещения файла
+     * Удаляет файл по атрибуту
      */
-    private function _renameFile(){
+    public function deleteFile($filePath = false){
 
-        $file = $this->savePath.$this->_newDir.$this->owner->attributes['image'];
-
-        if(file_exists($file))
-        {
-            if(!rename($file,
-                $this->savePath.$this->_newDir.self::_createFileName($this->owner->attributes['image'])))
-                throw new CException('Перемещение файла вызвало ошибку! Проверьте конечный путь');
-        }
-        else
-            throw new CException('Переименование файла не удалось. Исходный файл не найден!');
-    }
-
-    /**
-     * Создает директорию для сохранения файла, от текущей
-     * установки $this->savePath в нижнем регистре
-     * @var string $dirName принимает имя папки для создания
-     * @return string возвращает имя директории с разделителем
-     * @throws CException если каталог создать не удалось
-     */
-    private function _createDir($dirName){
-
-        $this->_newDir = strtolower($dirName).DS;
-        $path = $this->savePath.$dirName;
-
-        if(!is_dir($path)){
-            if(mkdir($path))
-                return $this->_newDir;
-            else
-                throw new CException('Не удалось создать директорию');
-        }
-        else
-            return $this->_newDir;
+        if(@is_file($filePath))
+            @unlink($filePath);
     }
 }

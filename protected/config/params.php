@@ -18,5 +18,8 @@ return array(
 	'copyrightInfo'=>'Copyright &copy; 2009 by My Company.',
     // count charters for shortText
 	'shortText'=>500,
-	'imageTemplates'=>array('system' => 100*100, 'article'=> 206*498),
+	'imageTemplates'=>array(
+        'post'=> array('article'=>'206*498'),
+        'category' => array('edit'=>'100*100','test'=> '300*500','view'=>'206*498','maha'=> '800*600'),
+    ),
 );
