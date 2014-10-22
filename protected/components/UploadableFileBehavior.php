@@ -92,6 +92,7 @@ class UploadableFileBehavior extends CActiveRecordBehavior{
         else{
             // Берем текущее значение ID для созданной записи
             $RecordId = $this->owner->id;
+
             // Дату берем либо из таблицы, если такой нет - задаем свою
             $RecordDate = (isset($this->owner->create)) ? $this->owner->create : date('dmy');
         }
@@ -118,9 +119,6 @@ class UploadableFileBehavior extends CActiveRecordBehavior{
         // Выполняем переименование файла. Который будет скопирован в
         // дирекотрию {$path} инициализированную при создании объекта
         $fileName->renameFile($new);
-
-        // Сохраняем id картинки в БД
-        $this->owner->updateByPk($RecordId, array('image'=>$RecordId));
 
         $newImage=new Images();
         $newImage->source=$path['dir'].DS.$new;
@@ -157,11 +155,13 @@ class UploadableFileBehavior extends CActiveRecordBehavior{
             $imageFile->templates = $templateName;
             $imageFile->save(false);
             // Создаем массив ID добавленных изображений
-            $idImageFiles[]=Yii::app()->db->lastInsertID;
+            $idImageFiles[]=$idForCategory=Yii::app()->db->lastInsertID;
+
+            if($templateName=='view')
+                $this->owner->updateByPk($RecordId, array('image'=>$idForCategory));
         }
         // Добавляем в массив ID, ID оригинаольного изображения
         array_unshift($idImageFiles,$newImage->id);
-
         // Записываем данные в связанную таблицу
         foreach($idImageFiles as $id){
             $imageCat = new ImageCat();
