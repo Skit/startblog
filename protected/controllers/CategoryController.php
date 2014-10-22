@@ -37,7 +37,7 @@ class CategoryController extends Controller
 			),
 			array('allow', // allow admin user to perform 'admin' and 'delete' actions
 				'actions'=>array('admin','delete'),
-				'users'=>array('admin'),
+				'users'=>array('@'),
 			),
 			array('deny',  // deny all users
 				'users'=>array('*'),
@@ -51,8 +51,11 @@ class CategoryController extends Controller
 	 */
 	public function actionView($id)
 	{
+        $model=$this->loadModel($id);
+
 		$this->render('view',array(
-			'model'=>$this->loadModel($id),
+			'model'=> $model,
+            'imageSource' => self::_getImage($model),
 		));
 	}
 
@@ -100,6 +103,7 @@ class CategoryController extends Controller
 
 		$this->render('update',array(
 			'model'=>$model,
+            'imageSource' => self::_getImage($model),
 		));
 	}
 
@@ -122,6 +126,7 @@ class CategoryController extends Controller
 	 */
 	public function actionIndex()
 	{
+        Yii::app()->theme = 'classic';
 		$dataProvider=new CActiveDataProvider('Category');
 		$this->render('index',array(
 			'dataProvider'=>$dataProvider,
@@ -153,6 +158,9 @@ class CategoryController extends Controller
 	public function loadModel($id)
 	{
 		$model=Category::model()->findByPk($id);
+		// Рабочий пример
+        //$model=Category::model()->with('imageCats')->find('id_images=:ID', array(':ID'=>93));
+
 		if($model===null)
 			throw new CHttpException(404,'The requested page does not exist.');
 		return $model;
@@ -170,4 +178,21 @@ class CategoryController extends Controller
 			Yii::app()->end();
 		}
 	}
+
+    /**
+     *
+     */
+    private function _getImage($model){
+
+        if(!empty($model->imageCats)) {
+            foreach ($model->imageCats as $k => $images) {
+                if ($images->id == $model->image)
+                    $imageSource = $images->source;
+            }
+        }
+        else
+            $imageSource = 'no_image.jpg';
+
+        return Yii::app()->request->baseUrl.DS.'media'.DS.'images'.DS.$imageSource;
+    }
 }
