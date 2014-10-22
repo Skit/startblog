@@ -29,14 +29,13 @@ class UploadableFileBehavior extends CActiveRecordBehavior{
      */
     private $_tmpFileOriginal;
 
-    /**
+     /**
      * Шорткат для Yii::getPathOfAlias($this->savePathAlias).DIRECTORY_SEPARATOR.
      * @return string путь к директории, в которой сохраняем файлы
      */
     public function getSavePath(){
         return Yii::getPathOfAlias($this->savePathAlias).DS;
     }
-
     /**
      * @return string путь к диреткории где будет временно сохранятся файл
      */
@@ -59,7 +58,6 @@ class UploadableFileBehavior extends CActiveRecordBehavior{
             $owner->validatorList->add($fileValidator);
         }
     }
-
     /**
      * Создает файл. Файл будет переименован и создана новая директория
      * @param CModelEvent $event
@@ -105,10 +103,10 @@ class UploadableFileBehavior extends CActiveRecordBehavior{
         // будут использованы далее в текущем методе
         $path = array(
             'path' => $this->getSavePath(),
-            'dir' => strtolower(get_class($this->owner)),
+            'dir' => rtrim($this->owner->pathsavebd,DS),
         );
         $templateFile = array(
-            'template'=> 'sys',
+            'template'=> 'orig',
             'id'=>$RecordId,
             'date'=>$RecordDate,
         );
@@ -121,11 +119,21 @@ class UploadableFileBehavior extends CActiveRecordBehavior{
         // дирекотрию {$path} инициализированную при создании объекта
         $fileName->renameFile($new);
 
-        // Сохраняем путь до картинки в БД
-        $this->owner->updateByPk($RecordId, array('image'=>$path['dir'].DS.$new));
+        // Сохраняем id картинки в БД
+        $this->owner->updateByPk($RecordId, array('image'=>$RecordId));
+
+        $newImage=new Images();
+        $newImage->source=$path['dir'].DS.$new;
+        $newImage->title='содержимое тестовой записи';
+        $newImage->templates = $templateFile['template'];
+        $newImage->save(false);
 
         // Получаем перечень шаблонов для создания ресайза
         $templates = Yii::app()->params['imageTemplates'][$path['dir']];
+
+        // Для ID изображений
+        $idImageFiles = array();
+
         // Обходим шаблоны, выполняя ресайз, согласно их значениям
         foreach($templates as $templateName => $templateSize){
             // компонент для работы с изображениями
@@ -135,13 +143,31 @@ class UploadableFileBehavior extends CActiveRecordBehavior{
             $image->resize(
                 str_replace('*', ',',$templateSize)
             );
-            // Сохраняем новый файл после ресайза
-            $image->save($path['path'].$path['dir'].DS.$new);
-
             // Задаем имя шаблона, для переименования файла
             $templateFile['template'] = $templateName;
-            $new = $fileName->createFileName($templateFile,$templateName);
+
+            $new = $fileName->createFileName($templateFile);
             $fileName->renameFile($new);
+
+            // Сохраняем новый файл после ресайза
+            $image->save($path['path'].$this->owner->pathsavebd.$new);
+
+            $imageFile=new Images();
+            $imageFile->source=$this->owner->pathsavebd.$new;
+            $imageFile->templates = $templateName;
+            $imageFile->save(false);
+            // Создаем массив ID добавленных изображений
+            $idImageFiles[]=Yii::app()->db->lastInsertID;
+        }
+        // Добавляем в массив ID, ID оригинаольного изображения
+        array_unshift($idImageFiles,$newImage->id);
+
+        // Записываем данные в связанную таблицу
+        foreach($idImageFiles as $id){
+            $imageCat = new ImageCat();
+            $imageCat->id_images = $id;
+            $imageCat->id_categoty = $RecordId;
+            $imageCat->save(false);
         }
         // Удаляем оригинальный файл
        self::deleteFile($this->_tmpFileOriginal);
@@ -160,7 +186,6 @@ class UploadableFileBehavior extends CActiveRecordBehavior{
      * Удаляет файл по атрибуту
      */
     public function deleteFile($filePath = false){
-
         if(@is_file($filePath))
             @unlink($filePath);
     }
