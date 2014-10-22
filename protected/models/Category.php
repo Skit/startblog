@@ -52,8 +52,9 @@ class Category extends CActiveRecord
 		// NOTE: you may need to adjust the relation name and the related
 		// class name for the relations automatically generated below.
 		return array(
-			'post' => array(self::BELONGS_TO, 'Post', 'post_id'),
-            'posts' => array(self::HAS_MANY, 'Post', 'category_id'),
+            'imageCats'=>array(self::MANY_MANY, 'Images', 'tbl_image_cat(id_categoty, id_images)'),
+            //'imageCats' => array(self::HAS_MANY, 'ImageCat', 'id_categoty'),
+            //'posts' => array(self::HAS_MANY, 'Post', 'category_id'),
 		);
 	}
 
@@ -130,5 +131,12 @@ class Category extends CActiveRecord
     public static function allCategory(){
         return CHtml::listData(
             self::model()->findAll(), 'id', 'title');
+    }
+
+    /**
+     *
+     */
+    public function getPathSaveBD(){
+        return strtolower(get_class($this)).DS;
     }
 }
