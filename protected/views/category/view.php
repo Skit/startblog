@@ -18,11 +18,22 @@ $this->menu=array(
 
 <h1>View Category #<?php echo $model->id; ?></h1>
 
-<?php $this->widget('zii.widgets.CDetailView', array(
+<?php
+foreach($model->imageCats as $k => $images){
+    if($images->templates=='view')
+    {
+        $image['source'] = $images->source;
+        $image['title'] = $images->title;
+    }
+}
+$this->widget('zii.widgets.CDetailView', array(
 	'data'=>$model,
 	'attributes'=>array(
 		'id',
 		'title',
-		'image',
-	),
+        array(
+            'label'=>'Image',
+            'type'=>'image',
+            'value'=> Yii::app()->request->baseUrl.DS.'media'.DS.'images'.DS.$image['source']),
+        ),
 )); ?>
