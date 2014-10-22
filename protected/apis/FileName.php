@@ -42,17 +42,17 @@ class FileName extends CComponent{
      */
     public function createFileName($template){
 
-        $file = $this->_tmp;
+        $pattern = '~.+(\.[a-z]{2,5})$~i';
 
-        $pattern = '/.+(\.[a-z]{2,5})$/i';
-
-        preg_match($pattern,$file,$match); // извлекаем расширение файла с точкой
+        preg_match($pattern,$this->_tmp,$match); // извлекаем расширение файла с точкой
 
         $extWithDot = strtolower($match[1]); // для эстетики все расширения будут в нижнем регистре
 
-        $newFileName = $template['id'].'_'.$template['date'].'_'.$template['template'].$extWithDot;
+        $hash = self::_hashFileName();
 
-        return self::_recursiveDuplicateFileName($newFileName, $template, $extWithDot);
+        $newFileName = $hash.'_'.$template['id'].'_'.$template['date'].'_'.$template['template'].$extWithDot;
+
+        return self::_recursiveDuplicateFileName($newFileName, $template, $extWithDot, $hash);
     }
 
     /**
@@ -63,15 +63,15 @@ class FileName extends CComponent{
      * @param array() $template шаблон для создания имени файла
      * @return string имя файла
      */
-    private function _recursiveDuplicateFileName($newFileName, $template, $extWithDot){
+    private function _recursiveDuplicateFileName($newFileName, $template, $extWithDot, $hash){
 
         if(file_exists($search=self::_createDir($this->_dir).$newFileName))
         {
-            $pattern = '/.+[0-9]+_[0-9]{6,}_[a-z]+_([0-9]+)\.[a-z]{2,5}$/i';
+            $pattern = '~.+[\\\/][0-9a-z]{6}_[0-9]+_[0-9]{6}_[a-z]+_([0-9]+)\.[a-z]{2,5}$~i';
 
             $duplicateNum = '1';
 
-            $constantFileName = $template['id'].'_'.$template['date'].'_'.$template['template'].'_';
+            $constantFileName = $hash.'_'.$template['id'].'_'.$template['date'].'_'.$template['template'].'_';
 
             preg_match($pattern,$search,$match);
 
@@ -83,7 +83,7 @@ class FileName extends CComponent{
             else
                 $newFileName = $constantFileName.$duplicateNum.$extWithDot;
 
-            $newFileName = self::_recursiveDuplicateFileName($newFileName, $template, $extWithDot);
+            $newFileName = self::_recursiveDuplicateFileName($newFileName, $template, $extWithDot, $hash);
 
             return $newFileName;
         }
@@ -127,5 +127,13 @@ class FileName extends CComponent{
         }
         else
             return $path.DS;
+    }
+    /**
+     *
+     */
+    private function _hashFileName(){
+
+        return substr(
+            md5_file($this->_tmp), 0,6);
     }
 } 
