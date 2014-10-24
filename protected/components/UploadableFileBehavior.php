@@ -128,6 +128,8 @@ class UploadableFileBehavior extends CActiveRecordBehavior{
 
         // Получаем перечень шаблонов для создания ресайза
         $templates = Yii::app()->params['imageTemplates'][$path['dir']];
+        // Добавляем системный шаблон
+        $templates = array_merge($templates, Yii::app()->params['imageTemplates']['system']);
 
         // Для ID изображений
         $idImageFiles = array();
@@ -148,7 +150,7 @@ class UploadableFileBehavior extends CActiveRecordBehavior{
             $fileName->renameFile($new);
 
             // Сохраняем новый файл после ресайза
-            $image->save($path['path'].$this->owner->pathsavebd.$new);
+            $image->save($path['path'] . $this->pathsavebd . $new);
 
             $imageFile=new Images();
             $imageFile->source=$this->owner->pathsavebd.$new;
@@ -157,16 +159,16 @@ class UploadableFileBehavior extends CActiveRecordBehavior{
             // Создаем массив ID добавленных изображений
             $idImageFiles[]=$idForCategory=Yii::app()->db->lastInsertID;
 
-            if($templateName=='view')
+            if ($templateName == 'sys')
                 $this->owner->updateByPk($RecordId, array('image'=>$idForCategory));
         }
         // Добавляем в массив ID, ID оригинаольного изображения
         array_unshift($idImageFiles,$newImage->id);
         // Записываем данные в связанную таблицу
         foreach($idImageFiles as $id){
-            $imageCat = new ImageCat();
+            $imageCat = new $this->owner->modelRelations();
             $imageCat->id_images = $id;
-            $imageCat->id_categoty = $RecordId;
+            $imageCat->{$this->owner->tableRelations} = $RecordId;
             $imageCat->save(false);
         }
         // Удаляем оригинальный файл
@@ -188,5 +190,13 @@ class UploadableFileBehavior extends CActiveRecordBehavior{
     public function deleteFile($filePath = false){
         if(@is_file($filePath))
             @unlink($filePath);
+    }
+
+    /**
+     *
+     */
+    public function getPathSaveBD()
+    {
+        return strtolower(get_class($this->owner)) . DS;
     }
 }
