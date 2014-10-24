@@ -193,7 +193,8 @@ class UploadableFileBehavior extends CActiveRecordBehavior{
     }
 
     /**
-     *
+     * @return string. Path consisting of the class name
+     * in lower case and directory separator
      */
     public function getPathSaveBD()
     {
