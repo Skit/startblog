@@ -16,24 +16,22 @@ $this->menu=array(
 );
 ?>
 
-<h1>View Category #<?php echo $model->id; ?></h1>
-
 <?php
-foreach($model->imageCats as $k => $images){
-    if($images->templates=='view')
-    {
-        $image['source'] = $images->source;
-        $image['title'] = $images->title;
-    }
-}
 $this->widget('zii.widgets.CDetailView', array(
 	'data'=>$model,
 	'attributes'=>array(
-		'id',
 		'title',
         array(
-            'label'=>'Image',
-            'type'=>'image',
-            'value'=> Yii::app()->request->baseUrl.DS.'media'.DS.'images'.DS.$image['source']),
+            'label'=>'Описание',
+            'value'=> ($model->description !== null) ? $model->description : 'Нет описания категории'
         ),
-)); ?>
+        array(
+            'label'=>'Картинка категории',
+            'type'=>'image',
+            'value'=> $imageSource
+        ),
+    ),
+));
+
+$this->widget('application.components.RelaitedPostWidget', array('posts'=>$model->posts));
+?>
