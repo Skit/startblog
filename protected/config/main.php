@@ -12,13 +12,14 @@ return array(
     //'theme'=>'Classic',
 
 	// preloading 'log' component
-	'preload'=>array('log'),
+	'preload'=>array('log','kint'),
 
 	// autoloading model and component classes
 	'import'=>array(
 		'application.models.*',
 		'application.components.*',
         'ext.easyimage.EasyImage',
+        'ext.yiidebugtb.XWebDebugRouter', //our extension
 	),
     'defaultController'=>'post',
 
@@ -37,17 +38,7 @@ return array(
 			// enable cookie-based authentication
 			'allowAutoLogin'=>true,
 		),
-        'log'=>array(
-            'class'=>'CLogRouter',
-            'routes'=>array(
-                array(
-                    'class'=>'CFileLogRoute',
-                    'levels'=>'error, warning',
-                ),
-            ),
-        ),
 		// uncomment the following to enable URLs in path-format
-
             'urlManager'=>array(
             'urlFormat'=>'path',
             'rules'=>array(
@@ -83,6 +74,12 @@ return array(
 					'class'=>'CFileLogRoute',
 					'levels'=>'error, warning',
 				),
+                array( // configuration for the toolbar
+                    'class'=>'XWebDebugRouter',
+                    'config'=>'alignRight, opaque, runInDebug, fixedPos, collapsed, yamlStyle',
+                    'levels'=>'error, warning, trace, profile, info',
+                    'allowedIPs'=>array('127.0.0.1','::1'),
+                ),
                 array(
                     // направляем результаты профайлинга в ProfileLogRoute (отображается
                     // внизу страницы)
@@ -95,12 +92,6 @@ return array(
                     'categories' => 'application',
                     'levels'=>'error, warning, trace, profile, info',
                 ),
-				// uncomment the following to show log messages on web pages
-				/*
-				array(
-					'class'=>'CWebLogRoute',
-				),
-				*/
 			),
 		),
         'easyImage' => array(
@@ -110,6 +101,9 @@ return array(
             //'cachePath' => '/assets/easyimage/',
             //'cacheTime' => 2592000,
             //'retinaSupport' => false,
+        ),
+        'kint' => array(
+            'class' => 'ext.kint.Kint',
         ),
         'themeManager' => array(
             'class'=>'themeManager'),
