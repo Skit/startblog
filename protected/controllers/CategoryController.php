@@ -51,7 +51,7 @@ class CategoryController extends Controller
 	 */
 	public function actionView($id)
 	{
-        $model=$this->loadModel($id);
+        $model=$this->relationPost($id);
 
 		$this->render('view',array(
 			'model'=> $model,
@@ -126,7 +126,6 @@ class CategoryController extends Controller
 	 */
 	public function actionIndex()
 	{
-        Yii::app()->theme = 'classic';
 		$dataProvider=new CActiveDataProvider('Category');
 		$this->render('index',array(
 			'dataProvider'=>$dataProvider,
@@ -165,6 +164,15 @@ class CategoryController extends Controller
 			throw new CHttpException(404,'The requested page does not exist.');
 		return $model;
 	}
+
+    public function relationPost($id)
+    {
+        $model=Category::model()->with('posts')->find('category_id=:ID', array(':ID'=>$id));
+
+        if($model===null)
+            throw new CHttpException(404,'The requested page does not exist.');
+        return $model;
+    }
 
 	/**
 	 * Performs the AJAX validation.
