@@ -9,6 +9,8 @@
  * @property string $title
  * @property string $image
  * @property string $description
+ * @property string $meta_tags
+ * @property string $alias
  *
  * The followings are the available model relations:
  * @property Post $post
@@ -22,6 +24,8 @@ class Category extends CActiveRecord
      */
     public $modelRelations = 'ImageCat';
     public $tableRelations = 'id_category';
+    public $meta_description;
+    public $meta_keywords;
     private $_imageFilePath = 'webroot.media.images';
 
     /**
@@ -29,7 +33,6 @@ class Category extends CActiveRecord
      */
     public static function allCategory()
     {
-
         return CHtml::listData(
             self::model()->findAll(), 'id', 'title');
     }
@@ -67,6 +70,7 @@ class Category extends CActiveRecord
             // The following rule is used by search().
             // @todo Please remove those attributes that should not be searched.
             array('title, image, description', 'safe', 'on' => 'search'),
+            array('meta_description, meta_keywords', 'safe'),
 		);
 	}
 
@@ -78,9 +82,9 @@ class Category extends CActiveRecord
         // NOTE: you may need to adjust the relation name and the related
         // class name for the relations automatically generated below.
 		return array(
-            'imageCats' => array(self::MANY_MANY, 'Images', 'tbl_image_cat(id_categoty, id_images)'),
-            //'imageCats' => array(self::HAS_MANY, 'ImageCat', 'id_categoty'),
-            'posts' => array(self::HAS_MANY, 'Post', 'category_id'),
+            'imageCats' => array(self::MANY_MANY, 'Images', 'tbl_image_cat(id_categoty, id_images)',
+                'select' => 'alt, title, source'),
+            'posts' => array(self::HAS_MANY, 'Post', 'category_id', 'select' => 'title'),
 		);
 	}
 
@@ -91,7 +95,10 @@ class Category extends CActiveRecord
 	{
         return array(
             'title' => 'Заголовок',
+            'alias' => 'Алисас заголовка',
             'description' => 'Описание',
+            'meta_description' => 'Мета описание',
+            'meta_keywords' => 'Ключевые слова',
             'image' => 'Изображение',
         );
     }
@@ -133,6 +140,25 @@ class Category extends CActiveRecord
             'id' => $this->id,
             'title' => $this->title,
         ));
+    }
+
+    /**
+     * @return bool
+     */
+    public function beforeSave()
+    {
+        if (parent::beforeSave() && ($this->isNewRecord == false)) {
+            if ($this->meta_description != '')
+                $meta_array['meta_description'] = $this->meta_description;
+
+            if ($this->meta_keywords != '')
+                $meta_array['meta_keywords'] = $this->meta_keywords;
+
+            $this->meta_tags = serialize($meta_array);
+
+            return true;
+        } else
+            return false;
     }
 
     /**

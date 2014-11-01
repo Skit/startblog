@@ -6,7 +6,8 @@
 
 <div class="form">
 
-<?php $form=$this->beginWidget('CActiveForm', array(
+    <?php  Yii::app()->getClientScript()->registerCoreScript('jquery');
+    $form = $this->beginWidget('CActiveForm', array(
 	'id'=>'category-form',
 	// Please note: When you enable ajax validation, make sure the corresponding
 	// controller action is handling ajax validation correctly.
@@ -21,10 +22,16 @@
 	<?php echo $form->errorSummary($model); ?>
 
 	<div class="row">
-		<?php echo $form->labelEx($model,'title'); ?>
-		<?php echo $form->textField($model,'title',array('size'=>50,'maxlength'=>50)); ?>
-		<?php echo $form->error($model,'title'); ?>
-	</div>
+        <?php echo $form->labelEx($model, 'title'); ?>
+        <?php echo $form->textField($model, 'title', array('size' => 50, 'maxlength' => 50, 'id' => 'ajaxAlias')); ?>
+        <?php echo $form->error($model, 'title'); ?>
+    </div>
+
+    <div class="row">
+        <?php echo $form->labelEx($model, 'alias'); ?>
+        <?php echo $form->textField($model, 'alias', array('size' => 50, 'maxlength' => 50, 'id' => 'translateNow')); ?>
+        <?php echo $form->error($model, 'alias'); ?>
+    </div>
 
     <div class="row">
         <?php echo $form->labelEx($model,'description'); ?>
@@ -33,10 +40,22 @@
         <?php echo $form->error($model,'description'); ?>
     </div>
 
+    <div class="row">
+        <?php echo $form->labelEx($model, 'meta_description'); ?>
+        <?php echo CHtml::activeTextArea($model, 'meta_description', array('rows' => 3, 'cols' => 51)); ?>
+        <?php echo $form->error($model, 'meta_description'); ?>
+    </div>
+
+    <div class="row">
+        <?php echo $form->labelEx($model, 'meta_keywords'); ?>
+        <?php echo CHtml::activeTextArea($model, 'meta_keywords', array('rows' => 3, 'cols' => 51)); ?>
+        <?php echo $form->error($model, 'meta_keywords'); ?>
+    </div>
+
     <?php /* поле для загрузки файла */ ?>
     <div class="field">
         <?php if($model->image): ?>
-            <p><?php echo CHtml::encode($model->image); ?></p>
+            <p><?php echo CHtml::image($imageSource); ?></p>
         <?php endif; ?>
         <?php echo $form->labelEx($model,'image'); ?>
         <?php echo $form->fileField($model,'image'); ?>
@@ -50,3 +69,21 @@
 <?php $this->endWidget(); ?>
 
 </div><!-- form -->
+<script>
+    $(document).ready(function () {
+
+        var input = $("#ajaxAlias");
+
+        input.change(function () {
+            $.ajax({
+                type: "POST",
+                url: '<?=$this->createUrl('category/translate')?>',
+                data: 'str=' + input.val(),
+                success: function (data) {
+                    $("#translateNow").val(data)
+                }
+            });
+        })
+    });
+
+</script>
