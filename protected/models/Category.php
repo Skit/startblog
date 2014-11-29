@@ -138,7 +138,7 @@ class Category extends CActiveRecord
     {
         return Yii::app()->createUrl('category/view', array(
             'id' => $this->id,
-            'title' => $this->title,
+            'title' => $this->alias,
         ));
     }
 
@@ -147,7 +147,11 @@ class Category extends CActiveRecord
      */
     public function beforeSave()
     {
+
         if (parent::beforeSave() && ($this->isNewRecord == false)) {
+
+            $meta_array = array('meta_description' => '', 'meta_keywords' => '');
+
             if ($this->meta_description != '')
                 $meta_array['meta_description'] = $this->meta_description;
 
