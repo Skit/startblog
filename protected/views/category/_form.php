@@ -25,6 +25,17 @@
         <?php echo $form->labelEx($model, 'title'); ?>
         <?php echo $form->textField($model, 'title', array('size' => 50, 'maxlength' => 50, 'id' => 'ajaxAlias')); ?>
         <?php echo $form->error($model, 'title'); ?>
+        <div id="translateGo" style="
+                                color: blue;
+                                cursor: pointer;
+                                float: right;
+                                position: relative;
+                                right: 210px;
+                                padding: 5px;
+                                text-decoration: underline;">Перевести
+            <img src="http://localhost/startblog/images/728.GIF" onclick="alert('yes!')" id="loader"
+                 style="display:none"/>
+        </div>
     </div>
 
     <div class="row">
@@ -61,7 +72,6 @@
         <?php echo $form->fileField($model,'image'); ?>
         <?php echo $form->error($model,'image'); ?>
     </div>
-
 	<div class="row buttons">
 		<?php echo CHtml::submitButton($model->isNewRecord ? 'Создать' : 'Сохранить'); ?>
 	</div>
@@ -69,21 +79,35 @@
 <?php $this->endWidget(); ?>
 
 </div><!-- form -->
+
 <script>
     $(document).ready(function () {
 
         var input = $("#ajaxAlias");
+        var output = $("#translateNow");
+        var button = $("#translateGo");
+        var loader = $('#loader');
+
+        button.click(function () {
+            loader.attr("style", "display:block");
+            translateNow();
+        })
 
         input.change(function () {
+            loader.attr("style", "display:block");
+            translateNow();
+    });
+
+        function translateNow() {
             $.ajax({
                 type: "POST",
                 url: '<?=$this->createUrl('category/translate')?>',
                 data: 'str=' + input.val(),
                 success: function (data) {
-                    $("#translateNow").val(data)
+                    output.val(data);
+                    loader.attr("style", "display:none");
                 }
             });
-        })
+        }
     });
-
 </script>
