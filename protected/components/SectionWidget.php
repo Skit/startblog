@@ -1,21 +1,17 @@
 <?php
-Yii::import('zii.widgets.CPortlet');
-
 /**
  * Class SectionWidget отображает список категорий/разделов
  */
-class SectionWidget extends CPortlet
+class SectionWidget extends CWidget
 {
-
-    public $title = 'Разделы';
+    public $title;
 
     public function getSection()
     {
-
         return Category::model()->findAll();
     }
 
-    protected function renderContent()
+    public function run()
     {
         $this->render('SectionWidget');
     }
