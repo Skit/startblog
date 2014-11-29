@@ -1,23 +1,15 @@
 <?php
 
-Yii::import('zii.widgets.CPortlet');
-
-class TagCloud extends CPortlet
+class TagCloud extends CWidget
 {
 	public $title='Tags';
 	public $maxTags=20;
+    public $tags = array();
 
-	protected function renderContent()
+    public function run()
 	{
-		$tags=Tag::model()->findTagWeights($this->maxTags);
+        $this->tags = Tag::model()->findTagWeights($this->maxTags);
 
-		foreach($tags as $tag=>$weight)
-		{
-			$link=CHtml::link(CHtml::encode($tag), array('post/index','tag'=>$tag));
-			echo CHtml::tag('span', array(
-				'class'=>'tag',
-				'style'=>"font-size:{$weight}pt",
-			), $link)."\n";
-		}
-	}
+        $this->render('TagCloud');
+    }
 }
