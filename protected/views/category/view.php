@@ -3,7 +3,7 @@
 /* @var $model Category */
 
 $this->breadcrumbs=array(
-	'Categories'=>array('index'),
+    'Разделы' => array('index'),
 	$model->title,
 );
 
@@ -15,23 +15,7 @@ $this->menu=array(
 	array('label'=>'Manage Category', 'url'=>array('admin')),
 );
 ?>
-
-<?php
-$this->widget('zii.widgets.CDetailView', array(
-	'data'=>$model,
-	'attributes'=>array(
-		'title',
-        array(
-            'label'=>'Описание',
-            'value'=> ($model->description !== null) ? $model->description : 'Нет описания категории'
-        ),
-        array(
-            'label'=>'Картинка категории',
-            'type'=>'image',
-            'value'=> $imageSource
-        ),
-    ),
-));
-
-$this->widget('application.components.RelaitedPostWidget', array('posts'=>$model->posts));
-?>
+<?= '<h1># ' . $model->title . '</h1>'; ?>
+<?= CHtml::image($imageSource); ?>
+    <p><?= ($model->description !== null) ? $model->description : 'Нет описания категории'; ?></p>
+<?php $this->widget('application.components.RelaitedPostWidget', array('posts' => $model->posts)); ?>

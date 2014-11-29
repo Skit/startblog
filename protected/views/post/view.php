@@ -7,6 +7,7 @@ $this->pageTitle=$model->title;
 
 <?php $this->renderPartial('_view', array(
 	'data'=>$model,
+    'imageSource' => $imageSource,
     'return'=>false,
     'processOutput'=>true,
 )); ?>
